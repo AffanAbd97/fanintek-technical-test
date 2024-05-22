@@ -1,0 +1,34 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             Int    @id @default(autoincrement())
+  nama           String
+  npp            Int
+  npp_supervisor Int?
+  email          String @unique
+  password       String
+
+  eppresences Eppresence[]
+}
+
+model Eppresence {
+  id Int @id @default(autoincrement())
+
+  id_users     Int
+  user         User     @relation(fields: [id_users], references: [id])
+  is_approve   Boolean  @default(false)
+  type TYPE
+  waktu        DateTime 
+}
+
+enum TYPE {
+  IN
+  OUT
+}
