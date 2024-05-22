@@ -1,69 +1,72 @@
 const prisma = require("../prisma");
 const { format } = require("date-fns");
-const { convertDateFormat } = require("../utils/helper");
+const { fromZonedTime, toZonedTime } = require("date-fns-tz");
+
+const timeZone = "Asia/Jakarta";
 
 const create = async (req, res) => {
   const { userId } = req.user;
   const { waktu, type } = req.body;
-  const [datePart, timePart] = waktu.split(" ");
 
-  const [year, month, day] = datePart.split("-");
-
-  const [hours, minutes, seconds] = timePart.split(":");
-  const parsedDate = new Date(year, month - 1, day, hours, minutes, seconds);
-  const adjustedDate = new Date(parsedDate.getTime());
-
+  const adjustedDate = fromZonedTime(new Date(waktu), timeZone); // GTM +7 TO UTC
   if (isNaN(adjustedDate)) {
     return res.status(400).json({ error: "Invalid datetime format for waktu" });
   }
-  const formattedDate = format(adjustedDate, "dd/MM/yy HH:mm");
-  const date = formattedDate.split(" ")[0];
-  const hour = formattedDate.split(" ")[1];
 
   try {
+    const datePart = format(toZonedTime(adjustedDate, timeZone), "yyyy-MM-dd");  // UTC TO GTM +7 
     const dataExist = await prisma.eppresence.findMany({
       where: {
         id_users: userId,
         type,
         waktu: {
-          startsWith: date,
+          gte: new Date(`${datePart}T00:00:00`),
+          lt: new Date(`${datePart}T23:59:59`),
         },
       },
     });
-    // res.send(dataExist)
+
     if (dataExist.length > 0) {
       return res.status(400).json({ error: "Presence Already Exist" });
     }
+
     if (type == "OUT") {
       const dataIN = await prisma.eppresence.findFirst({
         where: {
           id_users: userId,
           type: "IN",
           waktu: {
-            startsWith: date,
+            gte: new Date(`${datePart}T00:00:00`),
+            lt: new Date(`${datePart}T23:59:59`),
           },
         },
       });
 
-      const dateIn = dataIN.waktu.split(" ")[1];
-      const hourIn = parseInt(dateIn.split(":"));
-      const hourOut = parseInt(hour.split(":"));
-      if (hourIn >= hourOut) {
+      if (dataIN) {
+        const hourIn = toZonedTime(dataIN.waktu, timeZone).getHours();
+        const hourOut = toZonedTime(adjustedDate, timeZone).getHours();
+        if (hourIn >= hourOut) {
+          return res.status(400).send({
+            message: "OUT Hour Not Valid",
+          });
+        }
+      } else {
         return res.status(400).send({
-          message: "OUT Hour Not Valid",
+          message: "Have not checked in.",
         });
       }
     }
+
     await prisma.eppresence.create({
       data: {
         type: type,
-        waktu: formattedDate,
+        waktu: adjustedDate,
         id_users: userId,
       },
     });
 
     return res.status(200).send({
-      message: "Insert Epresence Sucess",
+      message: "Insert Epresence Success",
     });
   } catch (error) {
     console.log(error);
@@ -72,6 +75,7 @@ const create = async (req, res) => {
     }
   }
 };
+
 const update = async (req, res) => {
   const { id: presenceId } = req.params;
   const { userId } = req.user;
@@ -117,7 +121,7 @@ const update = async (req, res) => {
       },
     });
     return res.status(200).send({
-      message: "Update Epresence Sucess",
+      message: "Update Epresence Success",
     });
   } catch (error) {
     console.log(error);
@@ -126,6 +130,7 @@ const update = async (req, res) => {
     }
   }
 };
+
 const getData = async (req, res) => {
   try {
     const { userId } = req.user;
@@ -153,23 +158,30 @@ const getData = async (req, res) => {
     const data = [];
 
     queryIN.forEach((itemIN) => {
-      const dateIN = itemIN.waktu.split(" ")[0];
+      const dateIN = toZonedTime(itemIN.waktu, timeZone)
+        .toISOString()
+        .split("T")[0];
 
       const record = {
         id_user: itemIN.id_users,
         nama_user: itemIN.user.nama,
-        tanggal: convertDateFormat(dateIN),
-        waktu_masuk: itemIN.waktu.split(" ")[1],
+        tanggal: format(toZonedTime(new Date(dateIN), timeZone), "yyyy-MM-dd"),
+        waktu_masuk: format(toZonedTime(itemIN.waktu, timeZone), "HH:mm:ss"),
         waktu_pulang: null,
         status_masuk: itemIN.is_approve ? "APPROVE" : "REJECT",
         status_pulang: null,
       };
 
       queryOUT.forEach((itemOUT) => {
-        const dateOUT = itemOUT.waktu.split(" ")[0];
+        const dateOUT = toZonedTime(itemOUT.waktu, timeZone)
+          .toISOString()
+          .split("T")[0];
 
         if (dateIN === dateOUT) {
-          record.waktu_pulang = itemOUT.waktu.split(" ")[1];
+          record.waktu_pulang = format(
+            toZonedTime(itemOUT.waktu, timeZone),
+            "HH:mm:ss"
+          );
           record.status_pulang = itemOUT.is_approve ? "APPROVE" : "REJECT";
         }
       });

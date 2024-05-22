@@ -55,12 +55,12 @@ const register = async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
-    const newUser = await prisma.user.create({
+  await prisma.user.create({
       data: { nama, email, password: hashedPassword, npp, npp_supervisor },
     });
-    res.status(201).json(newUser);
+    return res.status(201).json({message:"User Created"});
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    return   res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -101,7 +101,7 @@ const login = async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: "12h" }
       );
-      res.json({
+      return  res.json({
         data: {
           nama: user.nama,
           email: user.email,
@@ -110,10 +110,10 @@ const login = async (req, res) => {
         token: accessToken,
       });
     } else {
-      res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    return  res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

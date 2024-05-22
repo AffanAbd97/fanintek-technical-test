@@ -25,7 +25,7 @@ model Eppresence {
   user       User    @relation(fields: [id_users], references: [id])
   is_approve Boolean @default(false)
   type       TYPE
-  waktu      String @db.VarChar(25)
+  waktu      DateTime
 }
 
 enum TYPE {
