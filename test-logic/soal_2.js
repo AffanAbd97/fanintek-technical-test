@@ -1,22 +1,19 @@
 // soal 2
 const countWord = (str) => {
-  let arr = str.split(" ");
-  let specialChar = ["[", "]", "*", "_", "=", "&", "(", "!"];
-  let charaterWords = [];
+  const specialChars = ["[", "]", "*", "_", "=", "&", "(", "!"];
 
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < specialChar.length; j++) {
-      let result = arr[i].includes(specialChar[j]);
+  const words = str.split(/\s+/);
 
-      if (result == true) {
-        charaterWords.push(arr[i]);
+  const filteredWords = words.filter((word) => {
+    for (const char of specialChars) {
+      if (word.includes(char)) {
+        return false;
       }
     }
-  }
+    return true;
+  });
 
-  let output = arr.length - charaterWords.length;
-
-  return output;
+  return filteredWords.length;
 };
 const inputContoh = "kemarin sophia per[gi ke mall";
 const input1 = "Saat meng*ecat tembok, agung dib_antu oleh Raihan";

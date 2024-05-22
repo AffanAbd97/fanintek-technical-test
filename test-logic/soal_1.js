@@ -1,19 +1,27 @@
 //soal 1
 
 const counPair = (arr) => {
-  let count = 0;
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = i + 1; j < arr.length; j++) {
-      if (arr[i] == arr[j]) {
-        arr.splice(j, 1);
-        count++;
-        break;
-      }
+  let pairs = {};
+  let counts = 0;
+  for (const sock of arr) {
+    if (pairs[sock]) {
+      pairs[sock]++;
+    } else {
+      pairs[sock] = 1;
     }
   }
-  console.log(`Jumlah Pasang :${count}`);
+  for (let item in pairs) {
+    counts += Math.floor(pairs[item] / 2);
+  }
+
+  return counts;
 };
-counPair([5, 7, 7, 9, 10, 4, 5, 10, 6, 5]);
-counPair([10, 20, 20, 10, 10, 30, 50, 10, 20]);
-counPair([6, 5, 2, 3, 5, 2, 2, 1, 1, 5, 1, 3, 3, 3, 5]);
-counPair([1, 1, 3, 1, 2, 1, 3, 3, 3, 3]);
+const contoh = [5, 7, 7, 9, 10, 4, 5, 10, 6, 5]
+const input1 = [10, 20, 20, 10, 10, 30, 50, 10, 20]
+const input2 = [6, 5, 2, 3, 5, 2, 2, 1, 1, 5, 1, 3, 3, 3, 5]
+const input3 = [1, 1, 3, 1, 2, 1, 3, 3, 3, 3]
+console.log(counPair(contoh)); 
+console.log(counPair(input1));
+console.log(counPair(input2));
+console.log(counPair(input3));
+

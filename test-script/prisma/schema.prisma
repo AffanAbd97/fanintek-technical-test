@@ -9,11 +9,11 @@ generator client {
 
 model User {
   id             Int    @id @default(autoincrement())
-  nama           String
+  nama           String @db.VarChar(255)
   npp            Int
   npp_supervisor Int?
-  email          String @unique
-  password       String
+  email          String @unique @db.VarChar(255)
+  password       String @db.VarChar(255)
 
   eppresences Eppresence[]
 }
@@ -21,11 +21,11 @@ model User {
 model Eppresence {
   id Int @id @default(autoincrement())
 
-  id_users     Int
-  user         User     @relation(fields: [id_users], references: [id])
-  is_approve   Boolean  @default(false)
-  type TYPE
-  waktu        DateTime 
+  id_users   Int
+  user       User    @relation(fields: [id_users], references: [id])
+  is_approve Boolean @default(false)
+  type       TYPE
+  waktu      String @db.VarChar(25)
 }
 
 enum TYPE {
