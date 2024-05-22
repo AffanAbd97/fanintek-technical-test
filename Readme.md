@@ -1,3 +1,8 @@
+## Note
+
+-   **Database Version : PostgreSQL 15.4**
+-   **Node Version : 20.9.0**
+
 
 # Local Installation For Test Script
 
